@@ -1,0 +1,551 @@
+// InterviewAI India - Complete Database Schema
+// Production-grade Prisma schema with all entities
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  STUDENT
+  PREMIUM
+  COLLEGE_ADMIN
+  ENTERPRISE_ADMIN
+  SUPPORT_AGENT
+  SUPER_ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  OTP
+}
+
+enum InterviewType {
+  HR
+  TECHNICAL
+  BEHAVIORAL
+  SYSTEM_DESIGN
+  PRODUCT_MANAGEMENT
+  CASE_STUDY
+  SALES
+  DATA_SCIENCE
+  CUSTOM_COMPANY
+}
+
+enum InterviewDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum InterviewStatus {
+  CREATED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  EXPIRED
+}
+
+enum AnswerMode {
+  TEXT
+  VOICE
+  VIDEO
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  PREMIUM
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAST_DUE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum ResumeStatus {
+  UPLOADED
+  PROCESSING
+  ANALYZED
+  FAILED
+}
+
+enum NotificationType {
+  INTERVIEW_COMPLETE
+  REPORT_READY
+  SUBSCRIPTION_EXPIRING
+  NEW_FEATURE
+  SYSTEM
+}
+
+// ============================================
+// USER & AUTH
+// ============================================
+
+model User {
+  id            String       @id @default(uuid()) @db.Uuid
+  name          String       @db.VarChar(255)
+  email         String       @unique @db.VarChar(255)
+  passwordHash  String?      @map("password_hash") @db.Text
+  role          UserRole     @default(STUDENT)
+  authProvider  AuthProvider @default(EMAIL) @map("auth_provider")
+  googleId      String?      @unique @map("google_id") @db.VarChar(255)
+  phone         String?      @db.VarChar(20)
+  avatarUrl     String?      @map("avatar_url") @db.Text
+  emailVerified Boolean      @default(false) @map("email_verified")
+  isActive      Boolean      @default(true) @map("is_active")
+  lastLoginAt   DateTime?    @map("last_login_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  deletedAt     DateTime?    @map("deleted_at")
+
+  // Relations
+  profile        Profile?
+  resumes        Resume[]
+  interviews     Interview[]
+  subscriptions  Subscription[]
+  payments       Payment[]
+  notifications  Notification[]
+  chatSessions   ChatSession[]
+  roadmaps       Roadmap[]
+  auditLogs      AuditLog[]
+  refreshTokens  RefreshToken[]
+
+  // College relation
+  collegeId String?  @map("college_id") @db.Uuid
+  college   College? @relation(fields: [collegeId], references: [id])
+
+  @@index([email])
+  @@index([role])
+  @@index([collegeId])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique @db.Text
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(255)
+  code      String   @db.VarChar(6)
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email, code])
+  @@map("otp_codes")
+}
+
+// ============================================
+// PROFILE
+// ============================================
+
+model Profile {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  bio             String?  @db.Text
+  targetRole      String?  @map("target_role") @db.VarChar(255)
+  experience      Int?     @default(0)
+  currentCompany  String?  @map("current_company") @db.VarChar(255)
+  currentRole     String?  @map("current_role") @db.VarChar(255)
+  location        String?  @db.VarChar(255)
+  linkedinUrl     String?  @map("linkedin_url") @db.Text
+  githubUrl       String?  @map("github_url") @db.Text
+  portfolioUrl    String?  @map("portfolio_url") @db.Text
+  skills          Json?    @default("[]")
+  education       Json?    @default("[]")
+  careerGoals     Json?    @default("[]") @map("career_goals")
+  targetCompanies Json?    @default("[]") @map("target_companies")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ============================================
+// RESUME
+// ============================================
+
+model Resume {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  fileName       String       @map("file_name") @db.VarChar(255)
+  fileUrl        String       @map("file_url") @db.Text
+  fileSize       Int          @map("file_size")
+  mimeType       String       @map("mime_type") @db.VarChar(100)
+  status         ResumeStatus @default(UPLOADED)
+  atsScore       Int?         @map("ats_score")
+  parsedData     Json?        @map("parsed_data")
+  skillsFound    Json?        @map("skills_found") @default("[]")
+  missingKeywords Json?       @map("missing_keywords") @default("[]")
+  weakSections   Json?        @map("weak_sections") @default("[]")
+  suggestions    Json?        @default("[]")
+  analysisReport Json?        @map("analysis_report")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("resumes")
+}
+
+// ============================================
+// INTERVIEW ENGINE
+// ============================================
+
+model Interview {
+  id              String              @id @default(uuid()) @db.Uuid
+  userId          String              @map("user_id") @db.Uuid
+  type            InterviewType
+  difficulty      InterviewDifficulty @default(MEDIUM)
+  role            String              @db.VarChar(255)
+  company         String?             @db.VarChar(255)
+  status          InterviewStatus     @default(CREATED)
+  totalQuestions  Int                 @default(10) @map("total_questions")
+  answeredCount   Int                 @default(0) @map("answered_count")
+  startedAt       DateTime?           @map("started_at")
+  completedAt     DateTime?           @map("completed_at")
+  duration        Int?                // in seconds
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions Question[]
+  report    Report?
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("interviews")
+}
+
+model Question {
+  id             String @id @default(uuid()) @db.Uuid
+  interviewId    String @map("interview_id") @db.Uuid
+  questionText   String @map("question_text") @db.Text
+  expectedAnswer String? @map("expected_answer") @db.Text
+  category       String? @db.VarChar(100)
+  difficulty     InterviewDifficulty @default(MEDIUM)
+  orderIndex     Int    @map("order_index")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  answer    Answer?
+
+  @@index([interviewId])
+  @@map("questions")
+}
+
+model Answer {
+  id          String     @id @default(uuid()) @db.Uuid
+  questionId  String     @unique @map("question_id") @db.Uuid
+  answerText  String?    @map("answer_text") @db.Text
+  audioUrl    String?    @map("audio_url") @db.Text
+  videoUrl    String?    @map("video_url") @db.Text
+  mode        AnswerMode @default(TEXT)
+  duration    Int?       // in seconds
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  question   Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  evaluation Evaluation?
+
+  @@map("answers")
+}
+
+model Evaluation {
+  id                  String @id @default(uuid()) @db.Uuid
+  answerId            String @unique @map("answer_id") @db.Uuid
+  technicalScore      Float  @map("technical_score")
+  communicationScore  Float  @map("communication_score")
+  confidenceScore     Float  @map("confidence_score")
+  problemSolvingScore Float  @map("problem_solving_score")
+  overallScore        Float  @map("overall_score")
+  feedback            String? @db.Text
+  strengths           Json?  @default("[]")
+  improvements        Json?  @default("[]")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  answer Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@map("evaluations")
+}
+
+model Report {
+  id              String @id @default(uuid()) @db.Uuid
+  interviewId     String @unique @map("interview_id") @db.Uuid
+  overallScore    Float  @map("overall_score")
+  technicalScore  Float  @map("technical_score")
+  communicationScore Float @map("communication_score")
+  confidenceScore Float  @map("confidence_score")
+  leadershipScore Float? @map("leadership_score")
+  problemSolvingScore Float? @map("problem_solving_score")
+  strengths       Json   @default("[]")
+  weaknesses      Json   @default("[]")
+  recommendations Json   @default("[]")
+  detailedFeedback String? @map("detailed_feedback") @db.Text
+  speechAnalysis  Json?  @map("speech_analysis")
+  videoAnalysis   Json?  @map("video_analysis")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@map("reports")
+}
+
+// ============================================
+// AI CAREER COACH
+// ============================================
+
+model ChatSession {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String   @db.VarChar(255)
+  context   String?  @db.VarChar(100) // resume_help, interview_prep, career_guidance, etc.
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id            String @id @default(uuid()) @db.Uuid
+  sessionId     String @map("session_id") @db.Uuid
+  role          String @db.VarChar(20) // user, assistant
+  content       String @db.Text
+  tokenCount    Int?   @map("token_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("chat_messages")
+}
+
+// ============================================
+// ROADMAPS
+// ============================================
+
+model Roadmap {
+  id        String @id @default(uuid()) @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  title     String @db.VarChar(255)
+  duration  String @db.VarChar(50) // 7_day, 30_day, 90_day
+  plan      Json   @default("[]")
+  progress  Int    @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("roadmaps")
+}
+
+// ============================================
+// SUBSCRIPTIONS & PAYMENTS
+// ============================================
+
+model Subscription {
+  id                String             @id @default(uuid()) @db.Uuid
+  userId            String             @map("user_id") @db.Uuid
+  plan              SubscriptionPlan   @default(FREE)
+  status            SubscriptionStatus @default(ACTIVE)
+  razorpaySubId     String?            @map("razorpay_sub_id") @db.VarChar(255)
+  startDate         DateTime           @map("start_date")
+  endDate           DateTime           @map("end_date")
+  cancelledAt       DateTime?          @map("cancelled_at")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id              String        @id @default(uuid()) @db.Uuid
+  userId          String        @map("user_id") @db.Uuid
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("INR") @db.VarChar(3)
+  status          PaymentStatus @default(PENDING)
+  razorpayOrderId String?       @map("razorpay_order_id") @db.VarChar(255)
+  razorpayPaymentId String?     @map("razorpay_payment_id") @db.VarChar(255)
+  transactionId   String?       @map("transaction_id") @db.VarChar(255)
+  invoiceUrl      String?       @map("invoice_url") @db.Text
+  gstAmount       Decimal?      @map("gst_amount") @db.Decimal(10, 2)
+  couponCode      String?       @map("coupon_code") @db.VarChar(50)
+  metadata        Json?
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([razorpayOrderId])
+  @@map("payments")
+}
+
+model Coupon {
+  id            String   @id @default(uuid()) @db.Uuid
+  code          String   @unique @db.VarChar(50)
+  discountType  String   @map("discount_type") @db.VarChar(20) // percentage, fixed
+  discountValue Decimal  @map("discount_value") @db.Decimal(10, 2)
+  maxUses       Int?     @map("max_uses")
+  usedCount     Int      @default(0) @map("used_count")
+  validFrom     DateTime @map("valid_from")
+  validUntil    DateTime @map("valid_until")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("coupons")
+}
+
+// ============================================
+// COLLEGE
+// ============================================
+
+model College {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(255)
+  code        String   @unique @db.VarChar(50)
+  location    String?  @db.VarChar(255)
+  website     String?  @db.Text
+  logoUrl     String?  @map("logo_url") @db.Text
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("colleges")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(255)
+  message   String           @db.Text
+  isRead    Boolean          @default(false) @map("is_read")
+  metadata  Json?
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ============================================
+// LEARNING HUB
+// ============================================
+
+model LearningResource {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  category    String   @db.VarChar(100) // interview_questions, notes, company_guides, system_design, dsa
+  subcategory String?  @db.VarChar(100)
+  content     String   @db.Text
+  company     String?  @db.VarChar(100)
+  difficulty  InterviewDifficulty @default(MEDIUM)
+  tags        Json     @default("[]")
+  viewCount   Int      @default(0) @map("view_count")
+  isPremium   Boolean  @default(false) @map("is_premium")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([company])
+  @@map("learning_resources")
+}
+
+// ============================================
+// AUDIT & ANALYTICS
+// ============================================
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  action    String   @db.VarChar(100)
+  entity    String   @db.VarChar(100)
+  entityId  String?  @map("entity_id") @db.VarChar(255)
+  metadata  Json?
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  event     String   @db.VarChar(100)
+  userId    String?  @map("user_id") @db.Uuid
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([event])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("analytics_events")
+}

@@ -1,0 +1,30 @@
+{
+  "name": "interviewai-india",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered Interview Preparation & Career Coaching Platform for India",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:server\"",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:server": "npm run dev --workspace=apps/server",
+    "build": "npm run build --workspace=apps/web && npm run build --workspace=apps/server",
+    "build:web": "npm run build --workspace=apps/web",
+    "build:server": "npm run build --workspace=apps/server",
+    "lint": "npm run lint --workspaces",
+    "db:generate": "npm run db:generate --workspace=packages/database",
+    "db:push": "npm run db:push --workspace=packages/database",
+    "db:migrate": "npm run db:migrate --workspace=packages/database",
+    "db:studio": "npm run db:studio --workspace=packages/database",
+    "clean": "rimraf node_modules apps/*/node_modules packages/*/node_modules"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "author": "InterviewAI India",
+  "license": "UNLICENSED"
+}
