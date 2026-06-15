@@ -1,120 +1,172 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Check, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { pricingPlans } from "@/config/site";
+import * as React from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Check, ArrowRight, Sparkles } from "lucide-react"
+import Link from "next/link"
+
+import { cn } from "@/lib/utils"
+import { MotionDiv, StaggerContainer, StaggerItem } from "@/components/shared/motion-div"
+import { pricingPlans } from "@/config/site"
 
 export function Pricing() {
+  const [annual, setAnnual] = React.useState(false)
+
   return (
-    <section id="pricing" className="relative py-24 sm:py-32">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary">
+    <section id="pricing" className="relative py-24 sm:py-32 overflow-hidden">
+      <div className="absolute inset-0 bg-muted/30" />
+      <div className="absolute inset-0 grid-pattern-large opacity-20 dark:opacity-10" />
+
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <MotionDiv className="text-center max-w-3xl mx-auto mb-16">
+          <motion.span
+            className="inline-block text-sm font-medium text-primary mb-4 tracking-wider uppercase"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
             Pricing
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Simple, transparent{" "}
-            <span className="bg-gradient-to-r from-primary to-brand bg-clip-text text-transparent">
-              pricing
-            </span>
+          </motion.span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+            Simple, Transparent{" "}
+            <span className="gradient-text">Pricing</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Start free, upgrade when you&apos;re ready. No hidden charges. Cancel
-            anytime.
+            Start free and upgrade as you grow. No hidden fees.
           </p>
-        </div>
+        </MotionDiv>
+
+        {/* Toggle */}
+        <MotionDiv className="flex items-center justify-center gap-4 mb-12">
+          <span className={cn("text-sm font-medium", !annual && "text-foreground", annual && "text-muted-foreground")}>
+            Monthly
+          </span>
+          <button
+            onClick={() => setAnnual(!annual)}
+            className="relative inline-flex h-7 w-12 items-center rounded-full transition-colors bg-muted-foreground/30"
+            aria-label="Toggle annual pricing"
+          >
+            <motion.span
+              className="inline-block size-5 rounded-full bg-primary shadow-sm"
+              animate={{ x: annual ? 20 : 2 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span className={cn("text-sm font-medium", annual && "text-foreground", !annual && "text-muted-foreground")}>
+            Annual
+            <span className="ml-1.5 text-xs text-success font-semibold">Save 20%</span>
+          </span>
+        </MotionDiv>
 
         {/* Pricing cards */}
-        <div className="mt-16 grid gap-6 lg:grid-cols-3">
-          {pricingPlans.map((plan) => (
-            <div
-              key={plan.id}
-              className={cn(
-                "relative flex flex-col rounded-2xl border p-8 transition-all duration-300",
-                plan.popular
-                  ? "border-primary bg-card shadow-xl shadow-primary/10 scale-[1.02]"
-                  : "border-border/50 bg-card/50 hover:border-border hover:shadow-lg"
-              )}
-            >
-              {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary px-4 py-1 text-xs">
-                  Most Popular
-                </Badge>
-              )}
+        <StaggerContainer className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {pricingPlans.map((plan, i) => {
+            const monthlyPrice = plan.price
+            const annualPrice = Math.round(monthlyPrice * 0.8)
 
-              <div>
-                <h3 className="text-lg font-semibold">{plan.name}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {plan.description}
-                </p>
-              </div>
-
-              <div className="mt-6 flex items-baseline gap-1">
-                {plan.price === 0 ? (
-                  <span className="text-4xl font-bold tracking-tight">Free</span>
-                ) : (
-                  <>
-                    <span className="text-sm text-muted-foreground">&#8377;</span>
-                    <span className="text-4xl font-bold tracking-tight">
-                      {plan.price}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      /{plan.period}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              <ul className="mt-8 flex-1 space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Link href="/register" className="mt-8 block">
-                <Button
+            return (
+              <StaggerItem key={plan.id}>
+                <motion.div
                   className={cn(
-                    "w-full gap-2",
+                    "relative rounded-2xl border p-6 sm:p-8 transition-all duration-300",
                     plan.popular
-                      ? ""
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      ? "border-primary/40 bg-card shadow-xl shadow-primary/5 scale-105 md:scale-110 z-10"
+                      : "border-border/60 bg-card hover:border-border"
                   )}
-                  variant={plan.popular ? "default" : "secondary"}
-                  size="lg"
+                  whileHover={{ y: -4 }}
                 >
-                  {plan.cta}
-                  <ArrowRight className="size-4" />
-                </Button>
-              </Link>
-            </div>
-          ))}
-        </div>
+                  {plan.popular && (
+                    <motion.div
+                      className="absolute -top-3 left-1/2 -translate-x-1/2"
+                      initial={{ opacity: 0, y: -10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                    >
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-primary to-brand px-3 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
+                        <Sparkles className="size-3" />
+                        Most Popular
+                      </span>
+                    </motion.div>
+                  )}
 
-        {/* Enterprise CTA */}
-        <div className="mt-12 rounded-2xl border border-border/50 bg-muted/30 p-8 text-center sm:p-12">
-          <h3 className="text-xl font-semibold">
-            Need a plan for your college or organization?
-          </h3>
-          <p className="mt-2 text-muted-foreground">
-            Custom pricing for placement cells, training institutes, and
-            enterprises with bulk access, analytics dashboard, and dedicated
-            support.
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold">{plan.name}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {plan.description}
+                    </p>
+                  </div>
+
+                  <div className="mb-6">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={annual ? "annual" : "monthly"}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {plan.price === 0 ? (
+                          <span className="text-4xl font-bold">Free</span>
+                        ) : (
+                          <>
+                            <span className="text-4xl font-bold">
+                              ₹{annual ? annualPrice : monthlyPrice}
+                            </span>
+                            <span className="text-muted-foreground ml-1">
+                              /{annual ? "mo" : "month"}
+                            </span>
+                          </>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+
+                  <Link href="/register">
+                    <motion.div
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      <button
+                        className={cn(
+                          "w-full rounded-xl py-2.5 text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2",
+                          plan.popular
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25"
+                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        )}
+                      >
+                        {plan.cta}
+                        <ArrowRight className="size-4" />
+                      </button>
+                    </motion.div>
+                  </Link>
+
+                  <ul className="mt-6 space-y-3">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-sm">
+                        <Check className="size-4 text-success mt-0.5 shrink-0" />
+                        <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+              </StaggerItem>
+            )
+          })}
+        </StaggerContainer>
+
+        {/* Enterprise */}
+        <MotionDiv className="text-center mt-16">
+          <p className="text-muted-foreground">
+            Need custom plans for your college or organization?{" "}
+            <a
+              href="#"
+              className="text-primary hover:underline font-medium"
+            >
+              Contact us
+            </a>
           </p>
-          <Link href="/contact" className="mt-6 inline-block">
-            <Button variant="outline" size="lg" className="gap-2">
-              Contact Sales
-              <ArrowRight className="size-4" />
-            </Button>
-          </Link>
-        </div>
+        </MotionDiv>
       </div>
     </section>
-  );
+  )
 }
