@@ -1,7 +1,9 @@
 import { Router } from "express";
+import { authenticate } from "@/middleware/auth";
 import { prisma } from "@/config/database";
 
 const router = Router();
+router.use(authenticate);
 
 router.get("/resources", async (req, res) => {
   try {

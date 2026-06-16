@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Sparkles, Plus, Trash2 } from "lucide-react";
+import { Send, Bot, User, Sparkles, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,32 @@ export default function CoachPage() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Create a new chat session on mount
+  useEffect(() => {
+    async function initSession() {
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coach/sessions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ title: "Career Coach Chat", context: "general" }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setSessionId(json.session.id);
+        }
+      } catch {
+        // Session creation failed — will use mock fallback
+      }
+    }
+    initSession();
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -58,17 +83,31 @@ export default function CoachPage() {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coach/sessions/${sessionId}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ role: "user", content: userMsg.content }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message);
+
       const assistantMsg: Message = {
-        id: (Date.now() + 1).toString(),
+        id: json.aiMessage.id,
         role: "assistant",
-        content: getMockResponse(userMsg.content),
-        timestamp: new Date(),
+        content: json.aiMessage.content,
+        timestamp: new Date(json.aiMessage.createdAt),
       };
       setMessages((prev) => [...prev, assistantMsg]);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to get AI response");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   }
 
   function handleSuggested(q: string) {
@@ -82,7 +121,22 @@ export default function CoachPage() {
           <h1 className="text-2xl font-bold tracking-tight">AI Career Coach</h1>
           <p className="text-muted-foreground">Your personal AI assistant for career guidance</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setMessages([messages[0]])}>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={async () => {
+          setMessages([messages[0]]);
+          try {
+            const accessToken = localStorage.getItem("accessToken");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/coach/sessions`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({ title: "Career Coach Chat", context: "general" }),
+            });
+            const json = await res.json();
+            if (json.success) setSessionId(json.session.id);
+          } catch {}
+        }}>
           <Plus className="size-4" />
           New Chat
         </Button>
@@ -191,22 +245,4 @@ export default function CoachPage() {
   );
 }
 
-function getMockResponse(query: string): string {
-  const q = query.toLowerCase();
-  if (q.includes("google") || q.includes("sde")) {
-    return "For Google SDE interviews, focus on:\n\n**1. Data Structures & Algorithms** (arrays, strings, trees, graphs, DP)\n**2. System Design** (distributed systems, scalability)\n**3. Behavioral Questions** (leadership, collaboration)\n\nI recommend practicing 2-3 LeetCode problems daily, focusing on medium/hard difficulty. Google values problem-solving approach over just getting the right answer. Would you like me to create a detailed study plan?";
-  }
-  if (q.includes("resume")) {
-    return "Here are quick resume optimization tips:\n\n- Use strong action verbs (Led, Built, Optimized, Designed)\n- Quantify achievements with metrics (\"Increased efficiency by 30%\")\n- Include relevant keywords from job descriptions\n- Keep it to 1 page for < 10 years experience\n- Add a skills section with technical & soft skills\n\nWant me to review specific sections of your resume?";
-  }
-  if (q.includes("salary") || q.includes("negotiation")) {
-    return "Great question! For salary negotiation:\n\n1. Research market rates on Glassdoor, AmbitionBox, LinkedIn\n2. Never give your expected salary first - ask for their range\n3. Focus on total compensation (base + bonus + stocks + benefits)\n4. Practice your negotiation script beforehand\n5. For Indian market: be transparent about your current CTC\n\nWould you like to practice a negotiation conversation?";
-  }
-  if (q.includes("plan") || q.includes("roadmap")) {
-    return "Here's a 30-day interview preparation plan:\n\n**Week 1:** Data Structures fundamentals (arrays, strings, hash maps)\n**Week 2:** Advanced DS (trees, graphs, dynamic programming)\n**Week 3:** System Design basics + company-specific research\n**Week 4:** Mock interviews + behavioral prep + weak areas\n\nShall I customize this for your specific target role?";
-  }
-  if (q.includes("tell me about yourself")) {
-    return 'Great question! The "Tell me about yourself" answer should follow this structure:\n\n1. **Present:** Your current role and key responsibilities\n2. **Past:** How your experience led you here (2-3 key achievements)\n3. **Future:** Why you\'re excited about this opportunity\n\nExample: "I\'m a full-stack developer with 4 years of experience building scalable web applications. At my current role, I led a microservices migration that reduced latency by 40%. I\'m excited about this role because it aligns with my passion for building performant systems."\n\nWant to practice your answer?';
-  }
-  return "That's an excellent question! Let me provide you with a comprehensive response.\n\n**Key Points to Consider:**\n\n1. Focus on your unique strengths and experiences\n2. Prepare specific examples from your background\n3. Practice your responses out loud\n4. Record yourself and analyze your delivery\n\nWould you like me to dive deeper into any specific aspect? I can also help you practice with a mock conversation.";
-}
+

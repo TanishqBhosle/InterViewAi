@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -11,48 +11,22 @@ import {
   AlertCircle,
   ArrowLeft,
   Bot,
-  ChevronRight,
   Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
 import { GlowCard } from "@/components/shared/glow-card"
 
-const questionBank: Record<string, string[]> = {
-  hr: [
-    "Tell me about yourself.",
-    "Why do you want to work at our company?",
-    "Where do you see yourself in 5 years?",
-    "What are your strengths and weaknesses?",
-    "Tell me about a time you faced a challenge and how you handled it.",
-    "Why did you leave your previous job?",
-    "How do you handle working under pressure?",
-    "What makes you a good fit for this role?",
-  ],
-  technical: [
-    "Explain the difference between REST and GraphQL.",
-    "How does garbage collection work in JavaScript?",
-    "Write a function to find the longest palindromic substring.",
-    "Explain how you would design a URL shortening service.",
-    "What is the Event Loop and how does it work?",
-    "How would you optimize a slow database query?",
-    "Explain microservices architecture.",
-    "What is the difference between let, const, and var?",
-  ],
-  behavioral: [
-    "Tell me about a time you led a team through a difficult project.",
-    "Describe a situation where you had a conflict with a colleague.",
-    "Tell me about a project that failed and what you learned.",
-    "Describe a time you went above and beyond for a customer.",
-    "How do you prioritize when you have multiple deadlines?",
-    "Tell me about a time you had to learn a new technology quickly.",
-    "Describe a situation where you influenced someone's opinion.",
-    "Tell me about a time you made a mistake and how you handled it.",
-  ],
+
+
+interface Question {
+  id: string
+  questionText: string
+  orderIndex: number
+  difficulty: string
 }
 
 const typeLabels: Record<string, string> = {
@@ -63,29 +37,54 @@ const typeLabels: Record<string, string> = {
   product: "Product Management Interview",
 }
 
-type Difficulty = "easy" | "medium" | "hard"
-
-const questionDifficulty: Difficulty[] = [
-  "easy", "easy", "medium", "medium", "medium", "hard", "hard", "hard",
-]
-
 export default function InterviewSessionPage() {
   const params = useParams()
   const router = useRouter()
   const type = params.type as string
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answer, setAnswer] = useState("")
+  const [answers, setAnswers] = useState<string[]>([])
   const [isRecording, setIsRecording] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [isThinking, setIsThinking] = useState(false)
-  const [answers] = useState<string[]>([])
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [interviewId, setInterviewId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const questions = questionBank[type] || questionBank.hr
+  useEffect(() => {
+    async function init() {
+      try {
+        const token = localStorage.getItem("accessToken")
+        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1"
+        const role = type === "company" ? "General" : typeLabels[type] || "General"
+        const res = await fetch(`${base}/interviews/start`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ role, type, difficulty: "MEDIUM", count: 8 }),
+        })
+        const json = await res.json()
+        if (json.success) {
+          setInterviewId(json.interviewId)
+          setQuestions(json.questions || [])
+        } else {
+          toast.error("Failed to start interview")
+        }
+      } catch {
+        toast.error("Could not connect to server")
+      } finally {
+        setLoading(false)
+      }
+    }
+    init()
+  }, [type])
 
   useEffect(() => {
     textareaRef.current?.focus()
-  }, [currentQuestion])
+  }, [currentQuestion, questions])
 
   async function handleSubmit() {
     if (!answer.trim()) {
@@ -94,15 +93,60 @@ export default function InterviewSessionPage() {
     }
 
     setIsThinking(true)
-    await new Promise((r) => setTimeout(r, 800))
+
+    const question = questions[currentQuestion]
+    if (interviewId && question) {
+      try {
+        const token = localStorage.getItem("accessToken")
+        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1"
+        await fetch(`${base}/interviews/answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ questionId: question.id, answerText: answer.trim() }),
+        })
+      } catch {
+        // Answer saved locally even if API fails
+      }
+    }
+
+    const newAnswers = [...answers]
+    newAnswers[currentQuestion] = answer.trim()
+    setAnswers(newAnswers)
+
     setIsThinking(false)
 
     if (currentQuestion < questions.length - 1) {
       setAnswer("")
       setCurrentQuestion((prev) => prev + 1)
     } else {
+      if (interviewId) {
+        try {
+          const token = localStorage.getItem("accessToken")
+        const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1"
+        await fetch(`${base}/interviews/${interviewId}/end`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        } catch {
+          // Report generation will retry
+        }
+      }
       setIsComplete(true)
       toast.success("Interview complete! Generating your report...")
+    }
+  }
+
+  function handlePrevious() {
+    if (currentQuestion > 0) {
+      const prev = currentQuestion - 1
+      setCurrentQuestion(prev)
+      setAnswer(answers[prev] || "")
     }
   }
 
@@ -113,8 +157,23 @@ export default function InterviewSessionPage() {
     }
   }
 
-  const progress = ((currentQuestion + 1) / questions.length) * 100
-  const difficulty = questionDifficulty[currentQuestion]
+  const safeQuestions = questions.length > 0 ? questions : []
+  const progress = safeQuestions.length > 0
+    ? ((currentQuestion + 1) / safeQuestions.length) * 100
+    : 0
+  const currentQ = safeQuestions[currentQuestion]
+  const difficulty = currentQ?.difficulty?.toLowerCase() || "medium"
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <Loader2 className="mx-auto size-8 animate-spin text-primary" />
+          <p className="mt-4 text-sm text-muted-foreground">Starting your interview...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (isComplete) {
     return (
@@ -160,14 +219,7 @@ export default function InterviewSessionPage() {
             </Button>
           </motion.div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCurrentQuestion(0)
-                setAnswer("")
-                setIsComplete(false)
-              }}
-            >
+            <Button variant="outline" onClick={() => router.push("/dashboard/interviews")}>
               Practice Again
             </Button>
           </motion.div>
@@ -178,7 +230,6 @@ export default function InterviewSessionPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      {/* Header */}
       <motion.div
         className="flex items-center gap-3"
         initial={{ opacity: 0, x: -20 }}
@@ -192,7 +243,7 @@ export default function InterviewSessionPage() {
             {typeLabels[type] || "Mock Interview"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Question {currentQuestion + 1} of {questions.length}
+            Question {currentQuestion + 1} of {safeQuestions.length}
           </p>
         </div>
         <Badge variant="outline" className="ml-auto gap-1">
@@ -204,16 +255,15 @@ export default function InterviewSessionPage() {
           className={
             difficulty === "easy"
               ? "border-emerald-500/30 text-emerald-500"
-              : difficulty === "medium"
-              ? "border-amber-500/30 text-amber-500"
-              : "border-rose-500/30 text-rose-500"
+              : difficulty === "hard"
+              ? "border-rose-500/30 text-rose-500"
+              : "border-amber-500/30 text-amber-500"
           }
         >
           {difficulty}
         </Badge>
       </motion.div>
 
-      {/* Progress bar */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
         <div className="relative h-2 rounded-full bg-muted overflow-hidden">
           <motion.div
@@ -225,7 +275,6 @@ export default function InterviewSessionPage() {
         </div>
       </motion.div>
 
-      {/* Question */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestion}
@@ -243,7 +292,7 @@ export default function InterviewSessionPage() {
                 <Bot className="size-4 text-primary-foreground" />
               </motion.div>
               <div>
-                <p className="text-sm font-medium">{questions[currentQuestion]}</p>
+                <p className="text-sm font-medium">{currentQ?.questionText || "Loading question..."}</p>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Answer in your own words. Be specific and provide examples.
                 </p>
@@ -253,7 +302,6 @@ export default function InterviewSessionPage() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Answer Input */}
       <motion.div
         className="space-y-3"
         initial={{ opacity: 0, y: 20 }}
@@ -292,11 +340,10 @@ export default function InterviewSessionPage() {
           onKeyDown={handleKeyDown}
         />
         <p className="text-xs text-muted-foreground text-right">
-          {answer.length} characters · Press Enter to submit
+          {answer.length} characters &middot; Press Enter to submit
         </p>
       </motion.div>
 
-      {/* Actions */}
       <motion.div
         className="flex justify-between"
         initial={{ opacity: 0 }}
@@ -307,10 +354,7 @@ export default function InterviewSessionPage() {
           variant="outline"
           size="sm"
           disabled={currentQuestion === 0}
-          onClick={() => {
-            setCurrentQuestion((prev) => prev - 1)
-            setAnswer(answers[currentQuestion - 1] || "")
-          }}
+          onClick={handlePrevious}
         >
           Previous
         </Button>
@@ -325,7 +369,7 @@ export default function InterviewSessionPage() {
                 <Loader2 className="size-4 animate-spin" />
                 Analyzing...
               </>
-            ) : currentQuestion === questions.length - 1 ? (
+            ) : currentQuestion === safeQuestions.length - 1 ? (
               <>
                 Finish Interview <Square className="size-4" />
               </>

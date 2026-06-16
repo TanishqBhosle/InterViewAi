@@ -20,6 +20,12 @@ router.get("/", async (req, res) => {
 
 router.put("/:id/read", async (req, res) => {
   try {
+    const notification = await prisma.notification.findFirst({
+      where: { id: req.params.id, userId: req.user!.userId },
+    });
+    if (!notification) {
+      return res.status(404).json({ success: false, message: "Notification not found" });
+    }
     await prisma.notification.update({ where: { id: req.params.id }, data: { isRead: true } });
     res.json({ success: true });
   } catch (err: any) {

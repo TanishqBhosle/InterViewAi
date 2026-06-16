@@ -4,6 +4,7 @@ dist/
 .env
 .env.local
 .env.production
+.env.*
 *.log
 .DS_Store
 Thumbs.db
@@ -12,3 +13,4 @@ coverage/
 .vercel/
 *.tsbuildinfo
 .prisma/
+!.env.example

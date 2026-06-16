@@ -9,7 +9,7 @@ import authRoutes from "./modules/auth/routes";
 import interviewRoutes from "./modules/interview/routes";
 import resumeRoutes from "./modules/resume/routes";
 import profileRoutes from "./modules/profile/routes";
-import subscriptionRoutes from "./modules/subscription/routes";
+
 import coachRoutes from "./modules/coach/routes";
 import learningRoutes from "./modules/learning/routes";
 import analyticsRoutes from "./modules/analytics/routes";
@@ -47,7 +47,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/interviews", interviewRoutes);
 app.use("/api/v1/resume", resumeRoutes);
 app.use("/api/v1/profile", profileRoutes);
-app.use("/api/v1/subscriptions", subscriptionRoutes);
+
 app.use("/api/v1/coach", coachRoutes);
 app.use("/api/v1/learning", learningRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);

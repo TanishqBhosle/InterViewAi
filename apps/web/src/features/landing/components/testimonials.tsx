@@ -189,21 +189,7 @@ export function CTA() {
                 <ArrowRightIcon />
               </a>
             </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <a
-                href="#pricing"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/20 transition-all duration-300"
-                onClick={(e) => {
-                  e.preventDefault()
-                  document.querySelector("#pricing")?.scrollIntoView({ behavior: "smooth" })
-                }}
-              >
-                View Plans
-              </a>
-            </motion.div>
+
           </div>
         </MotionDiv>
       </div>

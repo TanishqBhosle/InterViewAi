@@ -19,7 +19,6 @@ import {
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
   { label: "Testimonials", href: "#testimonials" },
   { label: "Resources", href: "#resources" },
 ] as const
@@ -40,8 +39,11 @@ function handleAnchorClick(e: React.MouseEvent<HTMLAnchorElement>) {
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
-  React.useEffect(() => setMounted(true), [])
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   return (
     <Button

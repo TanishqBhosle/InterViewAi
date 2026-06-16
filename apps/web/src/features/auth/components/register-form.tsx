@@ -48,7 +48,7 @@ export function RegisterForm() {
   async function onSubmit(data: RegisterForm) {
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/v1/auth/register", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: data.name, email: data.email, password: data.password }),
@@ -60,8 +60,8 @@ export function RegisterForm() {
       localStorage.setItem("user", JSON.stringify(json.user));
       toast.success("Account created successfully!");
       router.push("/dashboard");
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);
     }

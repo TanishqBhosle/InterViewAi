@@ -9,7 +9,6 @@ import { MotionDiv } from "@/components/shared/motion-div"
 const footerLinks = {
   Product: [
     { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
     { label: "Integrations", href: "#" },
     { label: "API", href: "#" },
   ],
@@ -28,7 +27,7 @@ const footerLinks = {
   Legal: [
     { label: "Privacy", href: "#" },
     { label: "Terms", href: "#" },
-    { label: "Refund Policy", href: "#" },
+
     { label: "Cookie Policy", href: "#" },
   ],
 }
@@ -96,39 +95,6 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Newsletter */}
-        <MotionDiv
-          className="mt-12 pt-8 border-t border-border/60"
-          direction="none"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h4 className="text-sm font-semibold">Stay updated</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                Get interview tips and product updates.
-              </p>
-            </div>
-            <div className="flex w-full sm:w-auto">
-              <div className="flex w-full max-w-sm items-center gap-2">
-                <div className="relative flex-1">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="w-full rounded-xl border border-border/60 bg-background py-2.5 pl-10 pr-3 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/40 transition-colors duration-200"
-                  />
-                </div>
-                <motion.button
-                  className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors duration-200"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Subscribe
-                </motion.button>
-              </div>
-            </div>
-          </div>
-        </MotionDiv>
 
         {/* Bottom bar */}
         <MotionDiv

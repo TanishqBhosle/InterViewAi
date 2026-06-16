@@ -43,7 +43,7 @@ export function LoginForm() {
   async function onSubmit(data: LoginForm) {
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:4000/api/v1/auth/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -55,8 +55,8 @@ export function LoginForm() {
       localStorage.setItem("user", JSON.stringify(json.user));
       toast.success("Welcome back!");
       router.push("/dashboard");
-    } catch (err: any) {
-      toast.error(err.message || "Invalid credentials");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Invalid credentials");
     } finally {
       setIsLoading(false);
     }

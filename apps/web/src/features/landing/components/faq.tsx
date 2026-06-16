@@ -13,11 +13,7 @@ const faqs = [
     answer:
       "Our AI conducts realistic interviews by asking role-specific questions, analyzing your responses in real-time, and providing instant feedback on content, communication, and confidence. The AI adapts its questions based on your answers for a personalized experience.",
   },
-  {
-    question: "Is there a free plan available?",
-    answer:
-      "Yes! Our Free plan includes 3 AI mock interviews per month, basic resume analysis, HR interview practice, and community access. You can upgrade to Pro or Premium anytime for unlimited access and advanced features.",
-  },
+
   {
     question: "How accurate is the AI feedback?",
     answer:
@@ -38,11 +34,7 @@ const faqs = [
     answer:
       "We cover HR interviews, technical interviews, behavioral interviews, system design, product management, case studies, data science, and sales interviews. Each type has specialized question banks and evaluation criteria.",
   },
-  {
-    question: "Can I cancel my subscription anytime?",
-    answer:
-      "Yes, you can cancel your subscription at any time. Your access continues until the end of the billing period. We believe in transparent pricing with no hidden fees or lock-in contracts.",
-  },
+
   {
     question: "Is my data secure and private?",
     answer:

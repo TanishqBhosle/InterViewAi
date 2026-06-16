@@ -1,11 +1,11 @@
 "use client";
 
-import { Users, DollarSign, TrendingUp, BarChart3, Activity, Target } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, TrendingUp, Activity } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 const stats = [
   { label: "Total Users", value: "12,450", change: "+12%", icon: Users, color: "text-blue-500" },
-  { label: "Revenue (MRR)", value: "₹3,72,500", change: "+8%", icon: DollarSign, color: "text-emerald-500" },
+
   { label: "Interviews Done", value: "45,200", change: "+23%", icon: Activity, color: "text-violet-500" },
   { label: "Conversion Rate", value: "18.5%", change: "+2.1%", icon: TrendingUp, color: "text-amber-500" },
 ];
@@ -36,21 +36,6 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Charts placeholder */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/50 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-lg">Revenue Overview</CardTitle>
-            <CardDescription>Monthly recurring revenue and growth</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex h-64 items-center justify-center rounded-lg bg-muted/30">
-              <BarChart3 className="size-8 text-muted-foreground/50" />
-              <span className="ml-2 text-sm text-muted-foreground">Chart will render here</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Recent Users */}
       <Card className="border-border/50">

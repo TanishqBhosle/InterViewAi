@@ -12,18 +12,22 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Sparkles,
   ChevronLeft,
   Menu,
   GraduationCap,
-  CreditCard,
   Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+interface StoredUser {
+  role: string;
+  name: string;
+  email: string;
+}
 
 const studentLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -32,7 +36,7 @@ const studentLinks = [
   { label: "AI Career Coach", href: "/dashboard/coach", icon: Brain },
   { label: "Learning Hub", href: "/dashboard/learn", icon: BookOpen },
   { label: "Progress & Reports", href: "/dashboard/reports", icon: BarChart3 },
-  { label: "Subscription", href: "/dashboard/billing", icon: CreditCard },
+
   { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
@@ -41,30 +45,24 @@ const adminLinks = [
   { label: "Admin Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Users", href: "/admin/users", icon: GraduationCap },
   { label: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { label: "Revenue", href: "/admin/revenue", icon: CreditCard },
+
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
-
-function getUserFromStorage() {
-  if (typeof window === "undefined") return null;
-  try {
-    const u = localStorage.getItem("user");
-    return u ? JSON.parse(u) : null;
-  } catch {
-    return null;
-  }
-}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    setUser(getUserFromStorage());
-  }, []);
+  const [user] = useState<StoredUser | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const u = localStorage.getItem("user");
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
   const navLinks = isAdmin ? adminLinks : studentLinks;
@@ -164,12 +162,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <ChevronLeft className={cn("size-4 transition-transform", collapsed && "rotate-180")} />
           </Button>
           <div className="flex-1" />
-          <Link href="/dashboard/billing">
-            <Button size="sm" variant="outline" className="gap-1.5 text-xs">
-              <Sparkles className="size-3 text-primary" />
-              Upgrade
-            </Button>
-          </Link>
+
         </header>
 
         {/* Page content */}

@@ -19,7 +19,7 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
-export async function apiClient<T = any>(
+export async function apiClient<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<{ success: boolean; data?: T; message?: string }> {

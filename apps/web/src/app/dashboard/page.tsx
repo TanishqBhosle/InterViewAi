@@ -67,15 +67,36 @@ const interviewTypes = [
   { id: "system-design", label: "System Design", icon: "🏗️", description: "Architecture" },
 ]
 
+interface DashboardStats {
+  totalInterviews: number;
+  avgScore: number;
+  atsScore: number;
+  totalHours: number;
+}
+
 export default function DashboardPage() {
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const userName = (() => {
+    if (typeof window === "undefined") return "there"
+    try {
+      const u = localStorage.getItem("user")
+      if (u) {
+        const parsed = JSON.parse(u)
+        return parsed.name?.split(" ")[0] || "there"
+      }
+    } catch {
+      // ignore
+    }
+    return "there"
+  })()
 
   useEffect(() => {
     async function load() {
       try {
         const data = await apiClient("/analytics/stats")
-        setStats(data.data)
+        setStats(data.data as DashboardStats)
       } catch {
         // Use defaults
       } finally {
@@ -108,7 +129,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold tracking-tight">
               {greeting},{" "}
               <span className="bg-gradient-to-r from-primary via-brand to-chart-2 bg-clip-text text-transparent">
-                Rahul
+                {userName}
               </span>
             </h1>
             <p className="text-muted-foreground">Here&apos;s your interview preparation overview</p>

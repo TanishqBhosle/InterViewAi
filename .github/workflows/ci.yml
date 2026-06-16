@@ -6,10 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -51,51 +47,3 @@ jobs:
         run: npm run db:generate && npm run db:push
       - run: npm run build
       - run: npm test
-
-  build-and-push:
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Log in to registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push web
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile.web
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:${{ github.sha }}
-      - name: Build and push server
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile.server
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:${{ github.sha }}
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name interviewai-cluster --region ap-south-1
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl set image deployment/web web=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:${{ github.sha }}
-          kubectl set image deployment/server server=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:${{ github.sha }}
-          kubectl rollout status deployment/web
-          kubectl rollout status deployment/server

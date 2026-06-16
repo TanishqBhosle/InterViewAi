@@ -88,29 +88,6 @@ async function main() {
     await prisma.learningResource.create({ data: res });
   }
 
-  // Create coupons
-  await prisma.coupon.create({
-    data: {
-      code: "WELCOME50",
-      discountType: "percentage",
-      discountValue: 50,
-      maxUses: 1000,
-      validFrom: new Date(),
-      validUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  await prisma.coupon.create({
-    data: {
-      code: "PRO299",
-      discountType: "fixed",
-      discountValue: 299,
-      maxUses: 500,
-      validFrom: new Date(),
-      validUntil: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
-    },
-  });
-
   console.log("Seeding complete!");
 }
 
