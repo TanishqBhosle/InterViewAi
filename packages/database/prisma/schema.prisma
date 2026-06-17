@@ -111,6 +111,10 @@ model User {
   auditLogs      AuditLog[]
   refreshTokens  RefreshToken[]
 
+  // Learning Hub
+  progress       UserProgress[]
+  notes          UserNote[]
+
   // College relation
   collegeId String?  @map("college_id") @db.Uuid
   college   College? @relation(fields: [collegeId], references: [id])
@@ -409,14 +413,113 @@ model Notification {
 }
 
 // ============================================
-// LEARNING HUB
+// LEARNING HUB - Content Hierarchy
+// ============================================
+
+model Subject {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique @db.VarChar(100)
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  icon        String   @default("BookOpen") @db.VarChar(50)
+  color       String?  @db.VarChar(50)
+  order       Int      @default(0)
+  isPublished Boolean  @default(true) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  topics    Topic[]
+  resources LearningResource[]
+
+  @@map("subjects")
+}
+
+model Topic {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @db.VarChar(200)
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  order       Int      @default(0)
+  subjectId   String   @map("subject_id") @db.Uuid
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  subtopics Subtopic[]
+
+  @@unique([subjectId, slug])
+  @@index([subjectId])
+  @@map("topics")
+}
+
+model Subtopic {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @db.VarChar(200)
+  title       String   @db.VarChar(200)
+  order       Int      @default(0)
+  topicId     String   @map("topic_id") @db.Uuid
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  content     Json     @default("{}")
+  quiz        Json     @default("[]")
+  faangQuestions Json  @default("[]") @map("faang_questions")
+  codingChallenges Json @default("[]") @map("coding_challenges")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  progress   UserProgress[]
+  notes      UserNote[]
+
+  @@unique([topicId, slug])
+  @@index([topicId])
+  @@map("subtopics")
+}
+
+// ============================================
+// LEARNING HUB - User Progress & Notes
+// ============================================
+
+model UserProgress {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  subtopicId String   @map("subtopic_id") @db.Uuid
+  status     String   @default("not_started") @db.VarChar(20) // not_started, in_progress, completed
+  score      Float?   // quiz score percentage
+  completedAt DateTime? @map("completed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtopic Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subtopicId])
+  @@index([userId])
+  @@map("user_progress")
+}
+
+model UserNote {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  subtopicId String   @map("subtopic_id") @db.Uuid
+  content    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subtopic Subtopic @relation(fields: [subtopicId], references: [id], onDelete: Cascade)
+
+  @@index([userId, subtopicId])
+  @@map("user_notes")
+}
+
+// ============================================
+// LEARNING HUB - Legacy Resources
 // ============================================
 
 model LearningResource {
   id          String   @id @default(uuid()) @db.Uuid
   title       String   @db.VarChar(255)
   description String?  @db.Text
-  category    String   @db.VarChar(100) // interview_questions, notes, company_guides, system_design, dsa
+  category    String   @db.VarChar(100)
   subcategory String?  @db.VarChar(100)
   content     String   @db.Text
   company     String?  @db.VarChar(100)
@@ -424,11 +527,14 @@ model LearningResource {
   tags        Json     @default("[]")
   viewCount   Int      @default(0) @map("view_count")
   isPremium   Boolean  @default(false) @map("is_premium")
+  subjectId   String?  @map("subject_id") @db.Uuid
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([category])
   @@index([company])
+  @@index([subjectId])
   @@map("learning_resources")
 }
 
