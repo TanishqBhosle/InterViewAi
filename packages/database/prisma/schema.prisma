@@ -115,6 +115,14 @@ model User {
   progress       UserProgress[]
   notes          UserNote[]
 
+  // DSA Mastery Hub
+  dsaProblems         DSAUserProblem[]
+  dsaPatternProgress  DSAPatternProgress[]
+  dsaMistakeLogs      DSAMistakeLog[]
+  dsaRevisionCards    DSARevisionCard[]
+  dsaMockInterviews   DSAMockInterview[]
+  dsaDailyPlans       DSADailyPlan[]
+
   // College relation
   collegeId String?  @map("college_id") @db.Uuid
   college   College? @relation(fields: [collegeId], references: [id])
@@ -573,3 +581,284 @@ model AnalyticsEvent {
   @@index([createdAt])
   @@map("analytics_events")
 }
+
+// ============================================
+// DSA MASTERY HUB
+// ============================================
+
+enum DSAProblemDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum DSAProblemStatus {
+  NOT_STARTED
+  ATTEMPTED
+  SOLVED
+  REVIEW
+  MASTERED
+}
+
+enum DSAPhase {
+  FOUNDATIONS
+  LINEAR_PATTERNS
+  SEARCHING
+  HIERARCHICAL
+  ADVANCED
+  OPTIMIZATION
+}
+
+model DSAPattern {
+  id              String    @id @default(uuid()) @db.Uuid
+  slug            String    @unique @db.VarChar(100)
+  name            String    @db.VarChar(200)
+  description     String?   @db.Text
+  phase           DSAPhase
+  order           Int       @default(0)
+  icon            String    @default("Code2") @db.VarChar(50)
+  color           String?   @db.VarChar(50)
+  recognitionSignals Json?  @map("recognition_signals")
+  decisionTree    Json?     @map("decision_tree")
+  codeTemplate    String?   @map("code_template") @db.Text
+  whenToUse       String?   @map("when_to_use") @db.Text
+  whenNotToUse    String?   @map("when_not_to_use") @db.Text
+  commonMistakes  Json?     @map("common_mistakes")
+  variations      Json?
+  realLifeAnalogy String?   @map("real_life_analogy") @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  problems        DSAProblem[]
+  userProgress    DSAPatternProgress[]
+
+  @@index([phase])
+  @@index([order])
+  @@map("dsa_patterns")
+}
+
+model DSAProblem {
+  id              String            @id @default(uuid()) @db.Uuid
+  leetcodeId      Int?              @unique @map("leetcode_id")
+  title           String            @db.VarChar(300)
+  slug            String            @db.VarChar(300)
+  difficulty      DSAProblemDifficulty @default(MEDIUM)
+  description     String?           @db.Text
+  patternId       String?           @map("pattern_id") @db.Uuid
+  tier            Int               @default(2) // 1=Must Solve, 2=Pattern, 3=Company, 4=FAANG
+  companies       Json @default("[]")
+  tags            Json @default("[]")
+  hints           Json?
+  bruteForce      String?           @map("brute_force") @db.Text
+  optimalSolution String?           @map("optimal_solution") @db.Text
+  timeComplexity  String?           @map("time_complexity") @db.VarChar(50)
+  spaceComplexity String?           @map("space_complexity") @db.VarChar(50)
+  dryRun          Json?
+  commonMistakes  Json?             @map("common_mistakes")
+  followUps       Json?             @map("follow_ups")
+  productionUse   String?           @map("production_use") @db.Text
+  expectedTime    Int?              @map("expected_time") // minutes
+  revisionFrequency Int?            @map("revision_frequency") // days
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  pattern         DSAPattern?       @relation(fields: [patternId], references: [id], onDelete: SetNull)
+  userProblems    DSAUserProblem[]
+  mistakeLogs     DSAMistakeLog[]
+  revisionCards   DSARevisionCard[]
+  companyProblems DSACompanyProblem[]
+  mockQuestions    DSAMockQuestion[]
+
+  @@index([patternId])
+  @@index([difficulty])
+  @@index([tier])
+  @@index([leetcodeId])
+  @@map("dsa_problems")
+}
+
+model DSAUserProblem {
+  id            String           @id @default(uuid()) @db.Uuid
+  userId        String           @map("user_id") @db.Uuid
+  problemId     String           @map("problem_id") @db.Uuid
+  status        DSAProblemStatus @default(NOT_STARTED)
+  attempts      Int              @default(0)
+  bestTime      Int?             @map("best_time") // seconds
+  lastAttemptAt DateTime?        @map("last_attempt_at")
+  solvedAt      DateTime?        @map("solved_at")
+  notes         String?          @db.Text
+  code          String?          @db.Text
+  language      String?          @db.VarChar(20)
+  confidence    Int              @default(0) // 0-100
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem DSAProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
+  @@map("dsa_user_problems")
+}
+
+model DSAPatternProgress {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  patternId     String   @map("pattern_id") @db.Uuid
+  solved        Int      @default(0)
+  total         Int      @default(0)
+  mastery       Float    @default(0) // 0-100
+  lastPracticed DateTime? @map("last_practiced")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pattern DSAPattern @relation(fields: [patternId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, patternId])
+  @@index([userId])
+  @@map("dsa_pattern_progress")
+}
+
+model DSAMistakeLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  problemId     String   @map("problem_id") @db.Uuid
+  coreMistake   String?  @map("core_mistake") @db.Text
+  patternMissed String?  @map("pattern_missed") @db.VarChar(200)
+  rootCause     String?  @map("root_cause") @db.Text
+  fixStrategy   String?  @map("fix_strategy") @db.Text
+  revisitDate   DateTime? @map("revisit_date")
+  confidence    Int      @default(0) // 0-100
+  resolved      Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem DSAProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([problemId])
+  @@index([revisitDate])
+  @@map("dsa_mistake_logs")
+}
+
+model DSARevisionCard {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  problemId     String   @map("problem_id") @db.Uuid
+  nextReview    DateTime @map("next_review")
+  interval      Int      @default(1) // days
+  ease          Float    @default(2.5)
+  reviews       Int      @default(0)
+  lastReview    DateTime? @map("last_review")
+  rating        Int      @default(0) // 0-5 (SM-2 scale)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user    User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem DSAProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+  @@index([userId])
+  @@index([nextReview])
+  @@map("dsa_revision_cards")
+}
+
+model DSACompanyTrack {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique @db.VarChar(100)
+  name          String   @db.VarChar(200)
+  logo          String?  @db.Text
+  description   String?  @db.Text
+  problemCount  Int      @default(0) @map("problem_count")
+  avgDifficulty String?  @map("avg_difficulty") @db.VarChar(20)
+  frequency     Json? // pattern frequencies
+  strategy      String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  problems DSACompanyProblem[]
+
+  @@map("dsa_company_tracks")
+}
+
+model DSACompanyProblem {
+  id        String   @id @default(uuid()) @db.Uuid
+  trackId   String   @map("track_id") @db.Uuid
+  problemId String   @map("problem_id") @db.Uuid
+  order     Int      @default(0)
+  frequency Int      @default(0) // times asked
+  createdAt DateTime @default(now()) @map("created_at")
+
+  track   DSACompanyTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  problem DSAProblem      @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, problemId])
+  @@index([trackId])
+  @@map("dsa_company_problems")
+}
+
+model DSAMockInterview {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  title         String   @db.VarChar(200)
+  duration      Int      @default(45) // minutes
+  questionCount Int      @default(5) @map("question_count")
+  difficulty    DSAProblemDifficulty @default(MEDIUM)
+  patterns      Json @default("[]")
+  status        String   @default("created") @db.VarChar(20)
+  score         Float?
+  feedback      String?  @db.Text
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions DSAMockQuestion[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("dsa_mock_interviews")
+}
+
+model DSAMockQuestion {
+  id           String   @id @default(uuid()) @db.Uuid
+  interviewId  String   @map("interview_id") @db.Uuid
+  problemId    String   @map("problem_id") @db.Uuid
+  orderIndex   Int      @map("order_index")
+  timeLimit    Int      @default(600) @map("time_limit") // seconds
+  userAnswer   String?  @map("user_answer") @db.Text
+  userTime     Int?     @map("user_time") // seconds
+  score        Float?
+  feedback     String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  interview DSAMockInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  problem   DSAProblem       @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@map("dsa_mock_questions")
+}
+
+model DSADailyPlan {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  date        DateTime @db.Date
+  duration    Int      @default(60) // minutes
+  plan        Json @default("[]")
+  completed   Boolean  @default(false)
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+  @@map("dsa_daily_plans")
+}
+

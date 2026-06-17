@@ -16,6 +16,7 @@ import {
   Menu,
   GraduationCap,
   Bell,
+  Code2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface StoredUser {
 
 const studentLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "DSA Mastery Hub", href: "/dashboard/dsa", icon: Code2 },
   { label: "Mock Interviews", href: "/dashboard/interviews", icon: MessageSquare },
   { label: "Resume Analyzer", href: "/dashboard/resume", icon: FileText },
   { label: "AI Career Coach", href: "/dashboard/coach", icon: Brain },

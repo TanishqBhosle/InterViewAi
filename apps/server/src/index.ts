@@ -14,6 +14,7 @@ import coachRoutes from "./modules/coach/routes";
 import learningRoutes from "./modules/learning/routes";
 import analyticsRoutes from "./modules/analytics/routes";
 import notificationRoutes from "./modules/notification/routes";
+import dsaRoutes from "./modules/dsa/routes";
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use("/api/v1/coach", coachRoutes);
 app.use("/api/v1/learning", learningRoutes);
 app.use("/api/v1/analytics", analyticsRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
+app.use("/api/v1/dsa", dsaRoutes);
 
 // 404 handler
 app.use((_req, res) => {
