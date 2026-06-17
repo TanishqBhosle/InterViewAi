@@ -161,7 +161,7 @@ export default   function DSAReviewPage() {
                     </Button>
                   </div>
 
-                  <Link href={`/dsa/problems/${currentCard.problemId}`}>
+                  <Link href={`/dashboard/dsa/problems/${currentCard.problemId}`}>
                     <Button variant="link" className="gap-2">
                       View Problem <ChevronRight className="h-4 w-4" />
                     </Button>

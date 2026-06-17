@@ -7,6 +7,7 @@ import rateLimit from "express-rate-limit";
 import { config } from "./config";
 import authRoutes from "./modules/auth/routes";
 import interviewRoutes from "./modules/interview/routes";
+import companyInterviewRoutes from "./modules/company-interview/routes";
 import resumeRoutes from "./modules/resume/routes";
 import profileRoutes from "./modules/profile/routes";
 
@@ -46,6 +47,7 @@ app.get("/api/health", (_req, res) => {
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/interviews", interviewRoutes);
+app.use("/api/v1/company-interviews", companyInterviewRoutes);
 app.use("/api/v1/resume", resumeRoutes);
 app.use("/api/v1/profile", profileRoutes);
 

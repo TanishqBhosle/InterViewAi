@@ -133,6 +133,50 @@ export const aiService = {
     }
   },
 
+  async generateJSON(prompt: string): Promise<any> {
+    try {
+      const openai = getClient();
+      const response = await openai.chat.completions.create({
+        model: config.grok.model,
+        messages: [
+          { role: "system", content: "You are a helpful assistant that outputs only valid JSON." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) throw new Error("No response from AI");
+
+      return JSON.parse(content);
+    } catch (err) {
+      console.error("AI JSON generation failed:", err);
+      throw new Error("Failed to generate JSON response. Please try again.");
+    }
+  },
+
+  async generateText(prompt: string): Promise<string> {
+    try {
+      const openai = getClient();
+      const response = await openai.chat.completions.create({
+        model: config.grok.model,
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      return response.choices[0]?.message?.content || "No response generated.";
+    } catch (err) {
+      console.error("AI text generation failed:", err);
+      throw new Error("Failed to generate text response. Please try again.");
+    }
+  },
+
   async getCoachResponse(context: string, message: string): Promise<string> {
     const prompt = COACH_PROMPT
       .replace("{context}", context || "General career guidance")

@@ -146,7 +146,7 @@ export default function DSAProblemsPage() {
         <StaggerContainer className="space-y-3">
           {problems.map((problem) => (
             <StaggerItem key={problem.id}>
-              <Link href={`/dsa/problems/${problem.id}`}>
+              <Link href={`/dashboard/dsa/problems/${problem.id}`}>
                 <Card className="border-border/30 hover:border-primary/50 transition-all cursor-pointer group">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="flex-shrink-0">

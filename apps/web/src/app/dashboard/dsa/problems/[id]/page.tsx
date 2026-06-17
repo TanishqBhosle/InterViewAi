@@ -100,7 +100,7 @@ export default function DSAProblemDetailPage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold">Problem not found</h2>
-        <Link href="/dsa/problems">
+        <Link href="/dashboard/dsa/problems">
           <Button variant="link" className="mt-2">Back to Problems</Button>
         </Link>
       </div>
@@ -115,7 +115,7 @@ export default function DSAProblemDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/dsa/problems">
+        <Link href="/dashboard/dsa/problems">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>

@@ -7,10 +7,11 @@ import { backendSubject } from "./backend";
 import { golangSubject } from "./golang";
 import { pythonSubject } from "./python";
 import { mlSubject } from "./ml";
-import { genaiSubject } from "./genai";
 import { systemDesignSubject } from "./system-design";
 import { hldSubject } from "./hld";
 import { lldSubject } from "./lld";
+
+import { genaiSubject } from "./genai";
 
 export async function seedLearningHub(prisma: PrismaClient) {
   console.log("Seeding Learning Hub...");
@@ -23,7 +24,7 @@ export async function seedLearningHub(prisma: PrismaClient) {
     golangSubject,
     pythonSubject,
     mlSubject,
-    genaiSubject,
+    ...(genaiSubject ? [genaiSubject] : []),
     systemDesignSubject,
     hldSubject,
     lldSubject,
@@ -31,7 +32,11 @@ export async function seedLearningHub(prisma: PrismaClient) {
 
   for (const subject of subjects) {
     console.log(`  Creating subject: ${subject.title}`);
-    await seedSubject(prisma, subject);
+    try {
+      await seedSubject(prisma, subject);
+    } catch (err: any) {
+      console.error(`  ERROR seeding ${subject.title}: ${err.message}`);
+    }
   }
 
   console.log("Learning Hub seeded successfully!");

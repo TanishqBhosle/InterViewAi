@@ -158,7 +158,7 @@ export default function DSADashboardPage() {
       {/* Quick Actions */}
       <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StaggerItem>
-          <Link href="/dsa/curriculum">
+          <Link href="/dashboard/dsa/curriculum">
             <Card className="border-border/50 bg-background/80 backdrop-blur-xl hover:border-primary/50 transition-colors cursor-pointer group">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
@@ -175,7 +175,7 @@ export default function DSADashboardPage() {
         </StaggerItem>
 
         <StaggerItem>
-          <Link href="/dsa/problems">
+          <Link href="/dashboard/dsa/problems">
             <Card className="border-border/50 bg-background/80 backdrop-blur-xl hover:border-primary/50 transition-colors cursor-pointer group">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-purple-500/10">
@@ -192,7 +192,7 @@ export default function DSADashboardPage() {
         </StaggerItem>
 
         <StaggerItem>
-          <Link href="/dsa/mock">
+          <Link href="/dashboard/dsa/mock">
             <Card className="border-border/50 bg-background/80 backdrop-blur-xl hover:border-primary/50 transition-colors cursor-pointer group">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-amber-500/10">
@@ -209,7 +209,7 @@ export default function DSADashboardPage() {
         </StaggerItem>
 
         <StaggerItem>
-          <Link href="/dsa/companies">
+          <Link href="/dashboard/dsa/companies">
             <Card className="border-border/50 bg-background/80 backdrop-blur-xl hover:border-primary/50 transition-colors cursor-pointer group">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-cyan-500/10">
@@ -336,7 +336,7 @@ export default function DSADashboardPage() {
             </div>
           </div>
           <div className="mt-6 flex justify-center">
-            <Link href="/dsa/progress">
+            <Link href="/dashboard/dsa/progress">
               <Button variant="outline" className="gap-2">
                 View Detailed Progress
                 <ArrowRight className="h-4 w-4" />

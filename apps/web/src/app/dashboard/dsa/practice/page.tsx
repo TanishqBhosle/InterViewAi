@@ -165,7 +165,7 @@ export default   function DSAPracticePage() {
                         <span className="text-xs text-muted-foreground">{item.duration} min</span>
                       </div>
                     </div>
-                    <Link href={`/dsa/problems/${item.problemId}`}>
+                    <Link href={`/dashboard/dsa/problems/${item.problemId}`}>
                       <Button variant="ghost" size="icon">
                         <ChevronRight className="h-4 w-4" />
                       </Button>

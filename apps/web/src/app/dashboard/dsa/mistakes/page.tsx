@@ -141,7 +141,7 @@ export default   function DSAMistakesPage() {
                         <CheckCircle2 className="h-4 w-4 mr-1" /> Resolve
                       </Button>
                     )}
-                    <Link href={`/dsa/problems/${mistake.problemId}`}>
+                    <Link href={`/dashboard/dsa/problems/${mistake.problemId}`}>
                       <Button variant="ghost" size="icon">
                         <ChevronRight className="h-4 w-4" />
                       </Button>

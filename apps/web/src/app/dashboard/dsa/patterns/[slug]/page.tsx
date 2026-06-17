@@ -78,7 +78,7 @@ export default function DSAPatternDetailPage() {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold">Pattern not found</h2>
-        <Link href="/dsa/curriculum">
+        <Link href="/dashboard/dsa/curriculum">
           <Button variant="link" className="mt-2">Back to Curriculum</Button>
         </Link>
       </div>
@@ -95,7 +95,7 @@ export default function DSAPatternDetailPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
-        <Link href="/dsa/curriculum">
+        <Link href="/dashboard/dsa/curriculum">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -142,7 +142,7 @@ export default function DSAPatternDetailPage() {
                 <StaggerContainer className="space-y-2">
                   {tierProblems.map((problem) => (
                     <StaggerItem key={problem.id}>
-                      <Link href={`/dsa/problems/${problem.id}`}>
+                      <Link href={`/dashboard/dsa/problems/${problem.id}`}>
                         <Card className="border-border/30 hover:border-primary/50 transition-all cursor-pointer group">
                           <CardContent className="p-4 flex items-center gap-4">
                             <div className="flex-shrink-0">

@@ -63,7 +63,7 @@ export default   function DSACompaniesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {tracks.map((track) => (
-            <Link key={track.id} href={`/dsa/companies/${track.slug}`}>
+            <Link key={track.id} href={`/dashboard/dsa/companies/${track.slug}`}>
               <Card className="border-border/50 bg-background/80 backdrop-blur-xl hover:border-primary/50 transition-all cursor-pointer group h-full">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">

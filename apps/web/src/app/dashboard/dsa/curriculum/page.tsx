@@ -102,7 +102,7 @@ export default function DSACurriculumPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {phasePatterns.map((pattern) => (
-                      <Link key={pattern.id} href={`/dsa/patterns/${pattern.slug}`}>
+                      <Link key={pattern.id} href={`/dashboard/dsa/patterns/${pattern.slug}`}>
                         <Card className="border-border/30 hover:border-primary/50 transition-all cursor-pointer group hover:shadow-lg hover:shadow-primary/5">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">

@@ -141,6 +141,7 @@ router.get("/subtopics/by-slug/:slug", async (req, res) => {
       data: {
         ...subtopic,
         userProgress: progress,
+        topic: { slug: topic.slug, title: topic.title, subject: { slug: subject.slug, title: subject.title } },
         navigation: {
           prev: prevSubtopic ? { slug: prevSubtopic.slug, title: prevSubtopic.title } : null,
           next: nextSubtopic ? { slug: nextSubtopic.slug, title: nextSubtopic.title } : null,
