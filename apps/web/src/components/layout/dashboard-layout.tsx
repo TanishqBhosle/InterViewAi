@@ -15,14 +15,13 @@ import {
   ChevronLeft,
   Menu,
   GraduationCap,
-  Bell,
   Code2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface StoredUser {
   role: string;
@@ -38,8 +37,6 @@ const studentLinks = [
   { label: "AI Career Coach", href: "/dashboard/coach", icon: Brain },
   { label: "Learning Hub", href: "/dashboard/learn", icon: BookOpen },
   { label: "Progress & Reports", href: "/dashboard/reports", icon: BarChart3 },
-
-  { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
@@ -56,15 +53,16 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user] = useState<StoredUser | null>(() => {
-    if (typeof window === "undefined") return null;
+  const [user, setUser] = useState<StoredUser | null>(null);
+
+  useEffect(() => {
     try {
       const u = localStorage.getItem("user");
-      return u ? JSON.parse(u) : null;
+      if (u) setUser(JSON.parse(u));
     } catch {
-      return null;
+      // ignore
     }
-  });
+  }, []);
 
   const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
   const navLinks = isAdmin ? adminLinks : studentLinks;

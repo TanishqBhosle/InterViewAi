@@ -63,13 +63,6 @@ const features = [
     borderColor: "border-indigo-500/20",
   },
   {
-    icon: Target,
-    title: "Company-Specific Prep",
-    description: "Tailored questions for Google, Amazon, Microsoft & more.",
-    color: "from-cyan-500/10 to-teal-500/10",
-    borderColor: "border-cyan-500/20",
-  },
-  {
     icon: GraduationCap,
     title: "Personalized Roadmaps",
     description: "Custom learning paths based on your target role.",
